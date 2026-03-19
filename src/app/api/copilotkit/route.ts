@@ -3,9 +3,10 @@ import {
   AnthropicAdapter,
   copilotRuntimeNextJSAppRouterEndpoint,
 } from "@copilotkit/runtime";
+import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest } from "next/server";
 
-// For production with AgentCore, uncomment and use HttpAgent:
+// For production with AgentCore, use HttpAgent instead:
 // import { HttpAgent } from "@ag-ui/client";
 // const agentCoreAgent = new HttpAgent({
 //   url: process.env.AGENTCORE_AGENT_URL!,
@@ -13,11 +14,13 @@ import { NextRequest } from "next/server";
 // });
 
 export const POST = async (req: NextRequest) => {
+  const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY!,
+  });
+
   const serviceAdapter = new AnthropicAdapter({
     model: "claude-sonnet-4-20250514",
-    anthropic: {
-      apiKey: process.env.ANTHROPIC_API_KEY!,
-    },
+    anthropic,
   });
 
   const runtime = new CopilotRuntime();

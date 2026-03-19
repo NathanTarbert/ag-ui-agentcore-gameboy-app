@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import "@copilotkit/react-ui/styles.css";
 
 export const metadata: Metadata = {
-  title: "Pixel Kanban | AgentCore + CopilotKit",
-  description: "A pixelated Kanban board powered by AG-UI and Amazon Bedrock AgentCore",
+  title: "GB Kanban | AgentCore + CopilotKit",
+  description: "A Game Boy styled Kanban board powered by AG-UI and Amazon Bedrock AgentCore",
 };
 
 export default function RootLayout({
@@ -20,7 +19,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="scanlines">{children}</body>
+      <body>{children}</body>
     </html>
   );
 }
