@@ -1,4 +1,4 @@
-# Pixel Kanban — AgentCore + CopilotKit
+# Gameboy-style — AgentCore + AG-UI & CopilotKit
 
 A retro NES-styled Kanban board with an AI copilot chat. Built with Next.js, CopilotKit, and the AG-UI protocol — ready to deploy to Amazon Bedrock AgentCore.
 
