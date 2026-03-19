@@ -48,52 +48,62 @@ export default function GameBoyChat() {
   };
 
   const visibleMessages = agent.messages.filter((m) => {
-    if (m.role === "user" && typeof m.content === "string" && m.content.trim())
-      return true;
-    if (
-      m.role === "assistant" &&
-      typeof m.content === "string" &&
-      m.content.trim()
-    )
-      return true;
-    return false;
+    const content = typeof m.content === "string" ? m.content.trim() : "";
+    if (!content) return false;
+    // Skip tool-related messages (role: tool, or content that looks like JSON/tool output)
+    if (m.role === "tool") return false;
+    if (m.role !== "user" && m.role !== "assistant") return false;
+    // Skip messages that are just JSON dumps (tool results leaking as text)
+    if (content.startsWith("[{") || content.startsWith("{\"")) return false;
+    // Skip assistant messages that contain tool call markers
+    if ("toolCalls" in m && (m as Record<string, unknown>).toolCalls) return false;
+    return true;
   });
 
   return (
-    <>
-      {/* Toggle button — Game Boy A/B button style */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-4 z-50 w-14 h-14 rounded-full bg-[var(--gb-dark)] border-4 border-[var(--gb-darkest)] text-[var(--gb-lightest)] text-[8px] font-[inherit] cursor-pointer hover:bg-[var(--gb-darkest)] active:translate-y-[2px]"
-        style={{ boxShadow: "3px 3px 0px var(--gb-shadow)" }}
-      >
-        {isOpen ? "B" : "A"}
-      </button>
-
-      {/* Chat panel — Game Boy screen */}
+    <div
+      style={{
+        position: "fixed",
+        bottom: 20,
+        right: 20,
+        zIndex: 9999,
+        pointerEvents: "none",
+      }}
+    >
+      {/* Chat panel */}
       {isOpen && (
-        <div className="fixed bottom-20 right-4 z-50 w-80 h-[420px] gb-screen flex flex-col">
+        <div
+          style={{
+            width: 384,
+            height: 460,
+            marginBottom: 8,
+            pointerEvents: "auto",
+            display: "flex",
+            flexDirection: "column",
+          }}
+          className="gb-screen"
+        >
           {/* Header */}
-          <div className="gb-column-header p-2 text-center text-[8px] relative z-10 flex items-center justify-between">
+          <div className="gb-column-header p-3 text-center text-sm relative z-10 flex items-center justify-between">
             <span className="opacity-60">◄</span>
             <span>═ COPILOT ═</span>
             <span className="opacity-60">►</span>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-2 relative z-10">
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 relative z-10">
             {visibleMessages.length === 0 && (
-              <div className="text-center text-[7px] text-[var(--gb-dark)] mt-6 leading-loose px-2">
-                <pre className="text-[6px] leading-tight mb-3">
-{`  ┌─────────────┐
-  │  ◆ READY ◆  │
-  └─────────────┘`}
+              <div className="text-center text-xs text-[var(--nes-gray)] mt-8 leading-loose px-3">
+                <pre className="text-[10px] leading-tight mb-4 text-[var(--nes-sky)]">
+{`  ┌──────────────────┐
+  │    ◆ READY ◆     │
+  └──────────────────┘`}
                 </pre>
-                <p className="mt-2">▶ ADD TASK...</p>
-                <p className="mt-1">▶ MOVE ... TO DONE</p>
-                <p className="mt-1">▶ DELETE ...</p>
-                <p className="mt-3">
-                  <span className="gb-blink">▌</span>
+                <p className="mt-3 text-[var(--nes-cream)]">▶ ADD TASK...</p>
+                <p className="mt-2 text-[var(--nes-cream)]">▶ MOVE ... TO DONE</p>
+                <p className="mt-2 text-[var(--nes-cream)]">▶ DELETE ...</p>
+                <p className="mt-4">
+                  <span className="gb-blink text-[var(--nes-gold)]">▌</span>
                 </p>
               </div>
             )}
@@ -110,14 +120,15 @@ export default function GameBoyChat() {
                   className={`flex ${isUser ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[85%] p-2 text-[8px] leading-relaxed break-words ${
+                    className={`max-w-[90%] p-4 text-[11px] break-words ${
                       isUser ? "gb-chat-bubble-user" : "gb-chat-bubble-ai"
                     }`}
+                    style={{ lineHeight: "2.4", wordSpacing: "6px", letterSpacing: "1px" }}
                   >
-                    <div className="text-[6px] mb-1 opacity-60 tracking-widest">
+                    <div className="text-[9px] mb-3 opacity-60 tracking-[3px]">
                       {isUser ? "► P1" : "► CPU"}
                     </div>
-                    {content}
+                    <div className="text-white">{content}</div>
                   </div>
                 </div>
               );
@@ -125,8 +136,8 @@ export default function GameBoyChat() {
 
             {agent.isRunning && (
               <div className="flex justify-start">
-                <div className="gb-chat-bubble-ai p-2 text-[8px]">
-                  <span className="gb-blink">● ● ●</span>
+                <div className="gb-chat-bubble-ai p-3 text-xs">
+                  <span className="gb-blink text-[var(--nes-sky)]">● ● ●</span>
                 </div>
               </div>
             )}
@@ -135,8 +146,8 @@ export default function GameBoyChat() {
           </div>
 
           {/* Input */}
-          <div className="p-2 border-t-3 border-[var(--gb-darkest)] bg-[var(--gb-light)] relative z-10">
-            <div className="flex gap-1">
+          <div className="p-3 border-t-4 border-[var(--nes-blue)] bg-[var(--nes-dark)] relative z-10">
+            <div className="flex gap-2">
               <input
                 ref={inputRef}
                 type="text"
@@ -145,12 +156,13 @@ export default function GameBoyChat() {
                 onKeyDown={handleKeyDown}
                 placeholder="TYPE CMD..."
                 disabled={agent.isRunning}
-                className="flex-1 bg-[var(--gb-lightest)] text-[var(--gb-darkest)] text-[8px] p-2 border-2 border-[var(--gb-darkest)] outline-none placeholder-[var(--gb-dark)] font-[inherit] disabled:opacity-50"
+                className="flex-1 bg-[var(--nes-black)] text-[var(--nes-white)] text-[11px] p-3 border-3 border-[var(--nes-blue)] outline-none placeholder-[var(--nes-gray)] font-[inherit] disabled:opacity-50 focus:border-[var(--nes-sky)]"
+                style={{ letterSpacing: "1px" }}
               />
               <button
                 onClick={() => sendMessage(input)}
                 disabled={agent.isRunning || !input.trim()}
-                className="gb-btn text-[8px] px-3 disabled:opacity-50"
+                className="gb-btn text-xs px-4 disabled:opacity-50"
               >
                 ▶
               </button>
@@ -158,6 +170,15 @@ export default function GameBoyChat() {
           </div>
         </div>
       )}
-    </>
+
+      {/* Toggle button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        style={{ pointerEvents: "auto" }}
+        className="w-16 h-16 rounded-full bg-[var(--nes-red)] border-4 border-[var(--nes-black)] text-[var(--nes-white)] text-sm font-[inherit] cursor-pointer hover:brightness-110 active:translate-y-[2px] ml-auto block"
+      >
+        {isOpen ? "B" : "A"}
+      </button>
+    </div>
   );
 }

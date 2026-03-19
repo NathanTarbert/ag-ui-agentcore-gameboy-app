@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@ag-ui/client": "^0.0.47",
+    "@ai-sdk/anthropic": "^3.0.58",
     "@anthropic-ai/sdk": "^0.57.0",
     "@copilotkit/react-core": "^1.54.0",
     "@copilotkit/react-ui": "^1.54.0",
